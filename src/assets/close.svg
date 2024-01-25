@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_图层_1" data-name="图层 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460.73 460.92">
+  <g>
+    <rect x="264.16" y="69.02" width="212.6" height="42" transform="translate(44.86 288.32) rotate(-45)"/>
+    <rect x="349.58" y="264.29" width="42" height="212.97" transform="translate(-153.64 370.64) rotate(-45)"/>
+    <rect x="68.78" y="-15.64" width="42" height="211.25" transform="translate(-37.33 89.84) rotate(-45)"/>
+    <rect x="-16.14" y="349.81" width="211.62" height="42" transform="translate(-235.94 172.01) rotate(-45)"/>
+  </g>
+  <circle cx="230.13" cy="230.82" r="33"/>
+</svg>
