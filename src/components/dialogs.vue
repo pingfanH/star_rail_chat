@@ -1,34 +1,95 @@
 <script setup>
 import message from "./message.vue"
 import dialog_option from "./option.vue"
-import {ref} from "vue";
-let message_list=ref([{
-  avatar:'/src/assets/huohuo_avatar.png',
-  name:'藿藿',
-  content:'救、救命...'
-}])
-//创建定时任务
-let MessageInterval=setInterval(() => {
-  let message={
-    avatar:'/src/assets/huohuo_avatar.png',
-    name:'藿藿',
-    content:'救命!!!!'
-  };
-  message_list.value.push(message)
-  if(message_list.value.length>3){
-    //删除定时
+import {onMounted, ref} from "vue";
+import gsap from "gsap";
 
-    clearInterval(MessageInterval);
+import t_dialog from "@/api/dialog";
+import dialog_data from "@/assets/dialog_data";
+import {dialog_callback, scroll_to_end, show_option} from "@/api/ultis";
+import {
+  other_name,
+  other_avatar,
+  other_intro,
+  message_list,
+  options,
+  dialog_data_main,
+  self_name,
+  self_avatar,
+  destiny
+} from "@/api/data";
+
+dialog_data_main.value=new t_dialog(dialog_data);
+let dialog=dialog_data_main.value;
+other_avatar.value=dialog.all_data.other_avatar;
+other_intro.value=dialog.all_data.other_intro;
+other_name.value=dialog.all_data.other_name;
+self_name.value=dialog.all_data.self_name;
+self_avatar.value=dialog.all_data.self_avatar;
+console.log(dialog.data)
+dialog.start((data)=>{
+
+  console.log(data)
+  let message={
+    avatar:other_avatar,
+    name:other_name,
+  };
+  if(typeof data =="string"){
+    message.content=data;
+    message_list.value.push(message);
+    return;
   }
-}, 1000);
+  if(data.hasOwnProperty("options")){
+    options.value=data.options;
+    //destiny.value=data.options.destiny;
+    show_option();
+    dialog.run=false;
+    return;
+  }
+  if(data.hasOwnProperty("destiny")){
+    dialog.run=false;
+    let index=0;
+    let destiny_data=data.destiny[destiny.value];
+    console.log("destiny",destiny.value)
+    console.log("destiny_data",data.destiny[destiny.value]);
+    let MessageInterval=setInterval(() => {
+      if(index>=destiny_data.length){
+        clearInterval(MessageInterval);
+        dialog.run=true;
+        return;
+      }
+      dialog_callback(destiny_data[index])
+      index+=1;
+    }, 1500);
+    return;
+  }
+
+});
+
+onMounted(()=>{
+  // 目标元素
+  var cbody = document.getElementsByClassName("cbody")[0];
+// 创建一个 MutationObserver 实例
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      scroll_to_end()
+    });
+  });
+// 配置观察选项
+  var config = { childList: true, subtree: true };
+  observer.observe(cbody, config);
+})
+//创建定时任务
+// let MessageInterval=setInterval(() => {
+// }, 1000);
 </script>
 
 <template>
   <div class="bg">
     <div class="headers">
       <div class="text">
-        <div class="name">藿藿</div>
-        <div class="intro">尾巴大爷的小跟班</div>
+        <div class="name">{{ other_name }}</div>
+        <div class="intro">{{ other_intro }}</div>
       </div>
       <div class="close">
         <img src="@/assets/close.svg">
@@ -38,7 +99,7 @@ let MessageInterval=setInterval(() => {
     <div class="main_cbody">
       <div class="cbody">
         <div  v-for="msg in message_list">
-          <message :avatar="msg.avatar" :name="msg.name" :content="msg.content"/>
+          <message :self="msg.self==true" :avatar="msg.avatar" :name="msg.name" :content="msg.content"/>
         </div>
         <!--      <div id="test"  style="width: 100px;height: 100px;background-color: aqua">-->
 
@@ -60,9 +121,14 @@ let MessageInterval=setInterval(() => {
 </template>
 
 <style scoped>
+@font-face {
+  font-family: 'GenShin';
+  src: url('src/assets/GenJyuuGothic-Bold.ttf');
+  font-display: swap;
+}
 /*改变滑块的最大高度*/
 .main_cbody::-webkit-scrollbar {
-  width: 5px;
+  width: 3px;
 }
 .main_cbody::-webkit-scrollbar-button{
   /*height: 10px;*/
@@ -77,11 +143,13 @@ let MessageInterval=setInterval(() => {
   background: rgba(0,0,0,0.1);
 }
 .bg{
+  font-family: GenShin;
   position: absolute;
-  width: 540px;
-  height: 550px;
+  width: 480px;
+  height: 500px;
   background: #e7e5e1;
   border-top-right-radius: 6%;
+  overflow: hidden;
   .headers{
     display: flex;
     align-items: center;
@@ -112,28 +180,31 @@ let MessageInterval=setInterval(() => {
     }
   }
   .main_cbody{
-    height: 300px;
+    height: 430px;
+    max-height: 430px;
     overflow: auto;
+    margin: 0px 30px 0 0px;
     .cbody{
       max-width: 100%;
       height: auto;
+      padding: 20px 40px 10px 40px;
+      margin: 0px 0 30px 0px;
       /*    max-height: 440px;*/
-      max-height: 400px;
-      padding: 20px 40px 20px 40px;
-      margin: 0px 40px 0px 0px;
-      overflow: auto;
+     /* max-height: 400px;*/
+      /*overflow: auto;*/
     }
   }
   .option_main{
-
+    opacity: 0;
+    display: none;
   }
 }
 .bg-shadow{
   opacity: 0.4;
   box-shadow: rgba(0, 0, 0, 0.45) 0px 2px 4px 0px;
   position: absolute;
-  width: 537px;
-  height: 547px;
+  width: 477px;
+  height: 497px;
   background-color: rgba(0, 0, 0, 0.45);
   border: rgba(255, 255, 255, 0.44) solid 2px;
   z-index: -1;

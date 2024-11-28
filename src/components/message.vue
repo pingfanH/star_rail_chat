@@ -1,11 +1,12 @@
-<script setup lang="ts">
+<script setup>
+import "@/assets/index.css"
 import gsap  from "gsap"
 import {ref, onMounted, watch} from "vue";
 const Props = defineProps(['avatar','name','content','self'])
 let avatar=ref(Props.avatar)
 let name=ref(Props.name)
 let content=ref(Props.content)
-let self=ref(Props.self)
+let self=ref(Props.self===true)
 let is_played=ref(false);
 const avatarElement = ref(null); // 创建 avatar 元素的引用
 const MainBodyElement = ref(null); // 创建 main-body 元素的引用
@@ -41,10 +42,10 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
   </div>
   <div v-if="self || self == 'true'" class="out">
     <div class="self">
-      <div class="avatar">
+      <div class="avatar" ref="avatarElement">
         <img :src="avatar">
       </div>
-      <div class="main_body">
+      <div class="main_body" ref="MainBodyElement">
         <div class="name">
           {{ name }}
         </div>
@@ -133,7 +134,9 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
     }
   }
   .avatar{
-    transform: translate(20px);
+    /*头像向下移动*/
+    opacity: 0;
+    margin: 30px 0 0 0;
     width: 60px;
     img{
       width: 60px;

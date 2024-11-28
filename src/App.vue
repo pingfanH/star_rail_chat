@@ -22,6 +22,6 @@ import dialogs from './components/dialogs.vue';
     z-index: -2;
   }
   dialog{
-
+    width: 50%;
   }
 </style>
