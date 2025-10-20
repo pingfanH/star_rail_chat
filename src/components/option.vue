@@ -22,7 +22,10 @@ function on_decision(item){
     if(index>=message.length){
       clearInterval(MessageInterval);
       destiny.value=item.destiny
-      dialog_data_main.value.run=true;
+      setTimeout(() => {
+        dialog_data_main.value.run=true;
+      }, 1000);
+
     }
 }, 1000);
 }

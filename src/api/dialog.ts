@@ -3,8 +3,10 @@ export default class dialog{
     data:any;
     offset:number;
     run:boolean;
+    type:String
     constructor(tdata:any) {
         this.all_data = tdata;
+        this.type=tdata.type;
         this.data=tdata.dialog_datas;
         this.offset=0;
         this.run=true;
@@ -18,7 +20,7 @@ export default class dialog{
             if(this.offset==this.data.length){
                 clearInterval(MessageInterval);
             }
-        }, 500);
+        }, 1500);
     }
     next():any{
         this.data[this.offset]=this.all_data[this.offset];
