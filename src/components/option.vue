@@ -1,39 +1,44 @@
 <script setup>
 import {scroll_to_end,show_option,hide_option} from "@/api/ultis";
-import {message_list, options, self_name, self_avatar, dialog_data_main, destiny} from "@/api/data";
 import {ref} from "vue";
 //let answer_list=ref([" 怎么了吗？","遇到危险了吗？"]);
+let props = defineProps(["dialog"]);
 function on_decision(item){
   hide_option();
   let index=0;
   let message=item.answer;
+  let dialog = props.dialog;
+
 
   let MessageInterval=setInterval(() => {
+
       let _message={
-        avatar:self_avatar,
-        name:self_name,
-        content:message[index],
+        avatar:dialog.meta.self_avatar,
+        name:dialog.meta.self_name,
+        content:message[index].content,
+        emote:message[index].emote,
         self:true,
       };
-      message_list.value.push(
+    console.log(_message)
+      props.dialog.message_list.value.push(
           _message
       )
       index+=1;
-    if(index>=message.length){
-      clearInterval(MessageInterval);
-      destiny.value=item.destiny
-      setTimeout(() => {
-        dialog_data_main.value.run=true;
-      }, 1000);
+      if(index>=message.length){
+        clearInterval(MessageInterval);
+        props.dialog.destiny.value=item.destiny
+        setTimeout(() => {
+          props.dialog.run=true;
+        }, 1000);
 
-    }
+      }
 }, 1000);
 }
 </script>
 
 <template>
   <div class="option">
-    <div class="answer" @click="on_decision(item)" v-for="item in options">
+    <div class="answer" @click="on_decision(item)" v-for="item in props.dialog.options.value">
       {{ item.display }}
     </div>
   </div>

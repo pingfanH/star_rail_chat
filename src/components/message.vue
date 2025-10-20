@@ -2,10 +2,12 @@
 import "@/assets/index.css"
 import gsap  from "gsap"
 import {ref, onMounted, watch} from "vue";
-const Props = defineProps(['avatar','name','content','self'])
+const Props = defineProps(['avatar','name','content','self','emote'])
 let avatar=ref(Props.avatar)
 let name=ref(Props.name)
 let content=ref(Props.content)
+let emote=ref(Props.emote)
+console.log(Props)
 let self=ref(Props.self===true)
 let is_played=ref(false);
 const avatarElement = ref(null); // 创建 avatar 元素的引用
@@ -25,37 +27,40 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
 </script>
 
 <template>
-  <div v-if="!self" class="out">
-    <div class="message">
-        <div class="avatar" ref="avatarElement">
-          <img :src="avatar">
-        </div>
-      <div class="main_body" ref="MainBodyElement">
-        <div class="name">
-          {{ name }}
-        </div>
-        <div class="body">
-        {{content}}
-        </div>
-      </div>
-    </div>
-  </div>
-  <div v-if="self || self == 'true'" class="out">
-    <div class="self">
+  <div class="out">
+    <div :class="['bubble', { self, message: !self }]">
       <div class="avatar" ref="avatarElement">
         <img :src="avatar">
       </div>
       <div class="main_body" ref="MainBodyElement">
-        <div class="name">
-          {{ name }}
+        <div class="name">{{ name }}</div>
+        <div v-if="!emote" class="body">
+          {{ content }}
+        </div>
+        <div v-if="emote" class="body_img">
+          <img :src="emote">
         </div>
 
-        <div class="body">
-          {{content}}
-        </div>
       </div>
     </div>
   </div>
+
+<!--  <div v-if="self || self == true" class="out">-->
+<!--    <div class="self">-->
+<!--      <div class="avatar" ref="avatarElement">-->
+<!--        <img :src="avatar">-->
+<!--      </div>-->
+<!--      <div class="main_body" ref="MainBodyElement">-->
+<!--        <div class="name">-->
+<!--          {{ name }}-->
+<!--        </div>-->
+
+<!--        <div class="body">-->
+<!--          {{content}}-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 </template>
 
 <style scoped>
@@ -99,13 +104,25 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
       margin: 10px 0 0 15px;
       font-size: 14px;
     }
+    .body_img {
+      /*文字自动换行*/
+      font-weight: 550;
+      word-wrap: break-word;
+      max-width: 85%;
+      height: auto;
+      padding: 10px 10px 10px 10px;
+      font-size: 14px;
+      img{
+        width: 100%;
+      }
+    }
   }
 }
 .self{
   width: 100%;
   display: flex;
   flex-direction: row-reverse;
-  margin: 0 0 40px 0;
+  margin: 0 0 0px 0;
   .main_body {
     opacity: 0;
     max-width: 85%;
@@ -131,6 +148,18 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
       padding: 10px 15px 10px 15px;
       margin: 10px 15px 0 0;
       font-size: 14px;
+    }
+    .body_img {
+      /*文字自动换行*/
+      font-weight: 550;
+      word-wrap: break-word;
+      max-width: 85%;
+      height: auto;
+      margin: 10px 15px 0 0;
+      font-size: 14px;
+      img{
+        width: 100%;
+      }
     }
   }
   .avatar{

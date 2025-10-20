@@ -5,38 +5,39 @@ import { onMounted, ref } from "vue";
 import gsap from "gsap";
 
 import t_dialog from "@/api/dialog";
-import { dialog_data, dialog_group_data } from "@/assets/dialog_data";
-import { dialog_callback, scroll_to_end, show_option } from "@/api/ultis";
-import {
-  other_name,
-  other_avatar,
-  other_intro,
-  message_list,
-  options,
-  dialog_data_main,
-  self_name,
-  self_avatar,
-  destiny,
-  avatar_map, group_name, group_intro
-} from "@/api/data";
+import { dialog_data, dialog_group_data,dialog_data1 } from "@/assets/dialog_data";
+import {scroll_to_end, show_option } from "@/api/ultis";
+//import dialog from "@/api/dialog";
+// import {
+//   other_name,
+//   other_avatar,
+//   other_intro,
+//   message_list,
+//   options,
+//   dialog_data_main,
+//   self_name,
+//   self_avatar,
+//   destiny,
+//   avatar_map, group_name, group_intro
+// } from "@/api/data";
 
-dialog_data_main.value = new t_dialog(dialog_group_data);
-let dialog = dialog_data_main.value;
+let dialog = new t_dialog(dialog_data1);
 
-avatar_map.value=dialog.all_data.avatar_map;
-group_name.value=dialog.all_data.group_name;
-group_intro.value=dialog.all_data.group_intro;
-other_avatar.value = dialog.all_data.other_avatar;
-other_intro.value = dialog.all_data.other_intro;
-other_name.value = dialog.all_data.other_name;
-self_name.value = dialog.all_data.self_name;
-self_avatar.value = dialog.all_data.self_avatar;
+
+// avatar_map.value=dialog.all_data.avatar_map;
+// group_name.value=dialog.all_data.group_name;
+// group_intro.value=dialog.all_data.group_intro;
+// other_avatar.value = dialog.all_data.other_avatar;
+// other_intro.value = dialog.all_data.other_intro;
+// other_name.value = dialog.all_data.other_name;
+// self_name.value = dialog.all_data.self_name;
+// self_avatar.value = dialog.all_data.self_avatar;
 console.log(dialog.data);
-dialog.start((data) => {
+dialog.start((data,self) => {
   console.log(data);
   let message;
   if (data.hasOwnProperty("options")) {
-    options.value = data.options;
+    self.options.value = data.options;
     //destiny.value=data.options.destiny;
     show_option();
     dialog.run = false;
@@ -45,38 +46,53 @@ dialog.start((data) => {
   if (data.hasOwnProperty("destiny")) {
     dialog.run = false;
     let index = 0;
-    let destiny_data = data.destiny[destiny.value];
-    console.log("destiny", destiny.value);
-    console.log("destiny_data", data.destiny[destiny.value]);
+    let destiny_data = data.destiny[self.destiny.value];
+    console.log("destiny", self.destiny.value);
+    console.log("destiny_data", data.destiny[dialog.destiny.value]);
     let MessageInterval = setInterval(() => {
       if (index >= destiny_data.length) {
         clearInterval(MessageInterval);
         dialog.run = true;
         return;
       }
-      dialog_callback(destiny_data[index]);
+      self.callback(destiny_data[index]);
       index += 1;
-    }, 1500);
+    }, 1000);
     return;
   }
-  if (dialog.type==="group") {
-    message= {
-      avatar: avatar_map.value[data.name].avatar,
-      name:  avatar_map.value[data.name].name,
-      content: data.content,
-    };
-  }else if (dialog.type==="dm"){
+  if (data.name==="self"){
     message = {
-      avatar: other_avatar,
-      name: other_name,
+      avatar: self.meta.self_avatar,
+      name: self.meta.self_name,
+      emote:data.emote,
+      content: data.content,
+      self:true
+    };
+  }else
+  if (dialog.meta.dialog_type==="group") {
+    message= {
+      avatar: self.meta.avatar_map[data.name].avatar,
+      name:  self.meta.avatar_map[data.name].name,
+      content: data.content,
+      emote:data.emote,
+      self:false
+    };
+  }else if (dialog.meta.dialog_type==="dm"){
+    message = {
+      avatar: self.meta.other_avatar,
+      name: self.meta.other_name,
+      content: data.content,
+      emote:data.emote,
+      self:false
     };
   }
+
   if (typeof data == "string") {
     message.content = data;
-    message_list.value.push(message);
+    self.message_list.value.push(message);
     return;
   }else{
-    message_list.value.push(message);
+    self.message_list.value.push(message);
     return;
   };
 });
@@ -102,13 +118,13 @@ onMounted(() => {
 <template>
   <div class="bg">
     <div class="headers">
-      <div class="text" v-if="dialog_data_main.type==='dm'">
-        <div class="name">{{ other_name }}</div>
-        <div class="intro">{{ other_intro }}</div>
+      <div class="text" v-if="dialog.meta.dialog_type==='dm'">
+        <div class="name">{{ dialog.meta.other_name }}</div>
+        <div class="intro">{{ dialog.meta.other_intro }}</div>
       </div>
-      <div class="text" v-if="dialog_data_main.type==='group'">
-        <div class="name">{{ group_name }}</div>
-        <div class="intro">{{ group_intro }}</div>
+      <div class="text" v-if="dialog.meta.dialog_type==='group'">
+        <div class="name">{{ dialog.meta.group_name }}</div>
+        <div class="intro">{{ dialog.meta.group_intro }}</div>
       </div>
       <div class="close">
         <img src="@/assets/close.svg" />
@@ -116,12 +132,13 @@ onMounted(() => {
     </div>
     <div class="main_cbody">
       <div class="cbody">
-        <div v-for="msg in message_list">
+        <div v-for="msg in dialog.message_list.value">
           <message
-            :self="msg.self == true"
+            :self="msg.self"
             :avatar="msg.avatar"
             :name="msg.name"
             :content="msg.content"
+            :emote="msg.emote"
           />
         </div>
         <!--      <div id="test"  style="width: 100px;height: 100px;background-color: aqua">-->
@@ -135,7 +152,7 @@ onMounted(() => {
       </div>
     </div>
     <div class="option_main">
-      <dialog_option />
+      <dialog_option :dialog="dialog" />
     </div>
   </div>
   <div class="bg-shadow"></div>
