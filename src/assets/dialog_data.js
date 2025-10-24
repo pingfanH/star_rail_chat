@@ -1,6 +1,7 @@
 // import { other_intro } from "@/api/data";
 
 const dialog_data = {
+  id:0,
   dialog_type: "dm",
   self_avatar: "/src/assets/xing_avatar.png",
   self_name: "平凡H",
@@ -132,7 +133,7 @@ const dialog_data = {
 };
 
 const dialog_group_data = {
-
+  id:1,
   dialog_type: "group",
 
   self_avatar: "/src/assets/xing_avatar.png",
@@ -158,6 +159,7 @@ const dialog_group_data = {
       {
          name:"xing1",
          content:"??",
+          emote:"/src/assets/d6899fd8d4054000b6de7169622f4de6.jpg"
       },
       {
           name:"xing2",
@@ -165,7 +167,7 @@ const dialog_group_data = {
       },
       {
           name:"xing3",
-          content:"?????"
+          content:"?????",
       },
       {
           options: [
@@ -210,9 +212,9 @@ const dialog_data1 = {
     self_name: "平凡H",
     other_avatar: "/src/assets/huohuo_avatar.png",
     other_name: "藿藿",
-    other_intro: "尾巴大爷的小跟班",
+    other_intro: "绘梨衣",
     dialog_datas: [
-        "救、救命...",
+        "小洛,救、救我...",
         {
             options: [
                 {

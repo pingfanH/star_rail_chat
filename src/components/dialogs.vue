@@ -7,6 +7,7 @@ import gsap from "gsap";
 import t_dialog from "@/api/dialog";
 import { dialog_data, dialog_group_data,dialog_data1 } from "@/assets/dialog_data";
 import {scroll_to_end, show_option } from "@/api/ultis";
+let props = defineProps(["data"])
 //import dialog from "@/api/dialog";
 // import {
 //   other_name,
@@ -21,7 +22,7 @@ import {scroll_to_end, show_option } from "@/api/ultis";
 //   avatar_map, group_name, group_intro
 // } from "@/api/data";
 
-let dialog = new t_dialog(dialog_data1);
+let dialog = new t_dialog(props.data);
 
 
 // avatar_map.value=dialog.all_data.avatar_map;
@@ -33,69 +34,7 @@ let dialog = new t_dialog(dialog_data1);
 // self_name.value = dialog.all_data.self_name;
 // self_avatar.value = dialog.all_data.self_avatar;
 console.log(dialog.data);
-dialog.start((data,self) => {
-  console.log(data);
-  let message;
-  if (data.hasOwnProperty("options")) {
-    self.options.value = data.options;
-    //destiny.value=data.options.destiny;
-    show_option();
-    dialog.run = false;
-    return;
-  }
-  if (data.hasOwnProperty("destiny")) {
-    dialog.run = false;
-    let index = 0;
-    let destiny_data = data.destiny[self.destiny.value];
-    console.log("destiny", self.destiny.value);
-    console.log("destiny_data", data.destiny[dialog.destiny.value]);
-    let MessageInterval = setInterval(() => {
-      if (index >= destiny_data.length) {
-        clearInterval(MessageInterval);
-        dialog.run = true;
-        return;
-      }
-      self.callback(destiny_data[index]);
-      index += 1;
-    }, 1000);
-    return;
-  }
-  if (data.name==="self"){
-    message = {
-      avatar: self.meta.self_avatar,
-      name: self.meta.self_name,
-      emote:data.emote,
-      content: data.content,
-      self:true
-    };
-  }else
-  if (dialog.meta.dialog_type==="group") {
-    message= {
-      avatar: self.meta.avatar_map[data.name].avatar,
-      name:  self.meta.avatar_map[data.name].name,
-      content: data.content,
-      emote:data.emote,
-      self:false
-    };
-  }else if (dialog.meta.dialog_type==="dm"){
-    message = {
-      avatar: self.meta.other_avatar,
-      name: self.meta.other_name,
-      content: data.content,
-      emote:data.emote,
-      self:false
-    };
-  }
-
-  if (typeof data == "string") {
-    message.content = data;
-    self.message_list.value.push(message);
-    return;
-  }else{
-    self.message_list.value.push(message);
-    return;
-  };
-});
+dialog.start();
 
 onMounted(() => {
   // 目标元素
@@ -103,7 +42,7 @@ onMounted(() => {
   // 创建一个 MutationObserver 实例
   var observer = new MutationObserver(function (mutations) {
     mutations.forEach(function (mutation) {
-      scroll_to_end();
+      scroll_to_end(dialog.meta.id);
     });
   });
   // 配置观察选项
@@ -116,7 +55,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg">
+  <div class="bg" :datatype="dialog.meta.id">
     <div class="headers">
       <div class="text" v-if="dialog.meta.dialog_type==='dm'">
         <div class="name">{{ dialog.meta.other_name }}</div>
@@ -139,6 +78,7 @@ onMounted(() => {
             :name="msg.name"
             :content="msg.content"
             :emote="msg.emote"
+            :dialog="dialog"
           />
         </div>
         <!--      <div id="test"  style="width: 100px;height: 100px;background-color: aqua">-->

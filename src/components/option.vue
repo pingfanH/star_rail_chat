@@ -3,36 +3,43 @@ import {scroll_to_end,show_option,hide_option} from "@/api/ultis";
 import {ref} from "vue";
 //let answer_list=ref([" 怎么了吗？","遇到危险了吗？"]);
 let props = defineProps(["dialog"]);
+
 function on_decision(item){
-  hide_option();
-  let index=0;
-  let message=item.answer;
+  console.log(item);
   let dialog = props.dialog;
-
-
-  let MessageInterval=setInterval(() => {
-
-      let _message={
-        avatar:dialog.meta.self_avatar,
-        name:dialog.meta.self_name,
-        content:message[index].content,
-        emote:message[index].emote,
-        self:true,
-      };
-    console.log(_message)
-      props.dialog.message_list.value.push(
-          _message
-      )
-      index+=1;
-      if(index>=message.length){
-        clearInterval(MessageInterval);
-        props.dialog.destiny.value=item.destiny
-        setTimeout(() => {
-          props.dialog.run=true;
-        }, 1000);
-
-      }
-}, 1000);
+  //dialog.destiny.value=item.destiny;
+  hide_option(dialog.meta.id);
+  dialog.run=true;
+  dialog.destiny.value=item.destiny;
+  dialog.option_flag.value=true;
+//   let MessageInterval=setInterval(() => {
+//     if (!dialog.run){
+//       return;
+//     }
+//       let _message={
+//         avatar:dialog.meta.self_avatar,
+//         name:dialog.meta.self_name,
+//         content:message[index].content,
+//         emote:message[index].emote,
+//         self:true,
+//       };
+//       console.log(_message)
+//       dialog.message_list.value.push(
+//           _message
+//       )
+//       index+=1;
+//       if(index>=message.length){
+//         clearInterval(MessageInterval);
+//         dialog.destiny.value=item.destiny
+//         console.log(item.destiny)
+//         console.log(dialog.destiny.value)
+//         //props.dialog.run=true;
+//         // setTimeout(() => {
+//         //   props.dialog.run=true;
+//         // }, 1000);
+//
+//       }
+// }, 500);
 }
 </script>
 

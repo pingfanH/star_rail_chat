@@ -1,29 +1,98 @@
 <script setup>
 import "@/assets/index.css"
 import gsap  from "gsap"
-import {ref, onMounted, watch} from "vue";
-const Props = defineProps(['avatar','name','content','self','emote'])
+import {ref, watch, nextTick} from "vue";
+
+const Props = defineProps(['avatar','name','content','self','emote','dialog'])
 let avatar=ref(Props.avatar)
 let name=ref(Props.name)
 let content=ref(Props.content)
 let emote=ref(Props.emote)
-console.log(Props)
 let self=ref(Props.self===true)
-let is_played=ref(false);
-const avatarElement = ref(null); // 创建 avatar 元素的引用
-const MainBodyElement = ref(null); // 创建 main-body 元素的引用
+let dialog=ref(Props.dialog)
+const avatarElement = ref(null);
+const MainBodyElement = ref(null);
+
+let isLoading = ref(true);
+let dotsAnimation = null;
+
+function animateDots() {
+  if (!MainBodyElement.value) return;
+  const dots = MainBodyElement.value.querySelectorAll('.dot');
+  if (dots.length > 0) {
+    dotsAnimation = gsap.timeline({ repeat: -1, repeatDelay: 0.3 });
+    dotsAnimation.fromTo(dots,
+      { opacity: 0 },
+      {
+        opacity: 1,
+        duration: 0.4,
+        ease: "power1.inOut",
+        stagger: {
+          each: 0.2,
+          from: "start"
+        }
+      }
+    ).to(dots, {
+        opacity: 0,
+        duration: 0.4,
+        ease: "power1.inOut",
+        stagger: {
+          each: 0.2,
+          from: "start"
+        }
+    }, ">0.1");
+  }
+}
+
+async function showContent() {
+  if (dotsAnimation) {
+    dotsAnimation.kill();
+  }
+  isLoading.value = false;
+
+  await nextTick(); // Wait for the DOM to update
+
+  const contentElement = MainBodyElement.value.querySelector('.body, .body_img');
+  if (contentElement) {
+    // Use clip-path to reveal the content without causing reflow
+    gsap.from(contentElement, {
+      clipPath: 'inset(0 100% 0 0)',
+      duration: 0.2,
+      ease: "power2.out",
+    }).then(() => {
+      if (self.value){
+        gsap.delayedCall(1, () => {
+          dialog.value.run = true;
+        });
+      }else{
+        dialog.value.run = true;
+      }
+    });
+  }
+}
 
 function animate(){
   let tl = gsap.timeline({defaults: {duration: 1}});
   tl.to(avatarElement.value, {opacity:0.5,y:-35,duration:0.25})
   tl.to(avatarElement.value, {opacity:1,y:-30,duration:0.2})
   tl.to(MainBodyElement.value,{opacity:1,y:0,duration:0.07},"<")
+
+  if (isLoading.value) {
+    if (!self.value){
+      animateDots();
+    }
+    // Simulate loading for 1.5s
+    gsap.delayedCall(self.value?0:1.5, showContent);
+
+  }
 }
+
 watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBody]) => {
   if (newAvatar && newMainBody) {
+    dialog.value.run=false;
     animate()
   }
-})
+}, { once: true })
 </script>
 
 <template>
@@ -34,43 +103,64 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
       </div>
       <div class="main_body" ref="MainBodyElement">
         <div class="name">{{ name }}</div>
-        <div v-if="!emote" class="body">
-          {{ content }}
+
+        <div v-if="isLoading" class="dots">
+          <div class="dot" v-for="i in 3"></div>
         </div>
-        <div v-if="emote" class="body_img">
-          <img :src="emote">
+
+        <div v-else class="content-wrapper">
+          <div v-if="!emote" class="body">
+            {{ content }}
+          </div>
+          <div v-if="emote" class="body_img">
+            <img :src="emote">
+          </div>
         </div>
 
       </div>
     </div>
   </div>
-
-<!--  <div v-if="self || self == true" class="out">-->
-<!--    <div class="self">-->
-<!--      <div class="avatar" ref="avatarElement">-->
-<!--        <img :src="avatar">-->
-<!--      </div>-->
-<!--      <div class="main_body" ref="MainBodyElement">-->
-<!--        <div class="name">-->
-<!--          {{ name }}-->
-<!--        </div>-->
-
-<!--        <div class="body">-->
-<!--          {{content}}-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--  </div>-->
 </template>
 
 <style scoped>
+.bubble{
+  display: flex;
+}
+.dots{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 15px;
+  min-height: 20px; /* give some space */
+  .dot{
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: black;
+    margin: 0 3px;
+    opacity: 0; /* Start with opacity 0 */
+  }
+}
 .out{
   width: 100%;
 }
+
+.content-wrapper {
+  /* This wrapper helps contain the animation */
+  display: inline-block;
+  max-width: 85%;
+  margin: 10px 0 0 15px;
+}
+
+.self .content-wrapper {
+    margin: 10px 15px 0 0;
+}
+
 .message{
-  display: flex;
   width: 100%;
   margin: 0 0 0px 0;
+
+
     .avatar{
       /*头像向下移动*/
       opacity: 0;
@@ -83,7 +173,8 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
     }
   .main_body {
     opacity: 0;
-    max-width: 85%;
+    width: 100%;
+
     .name {
       width: 100%;
       max-height: 20px;
@@ -93,25 +184,24 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
       color: #808080;
     }
     .body {
-      /*文字自动换行*/
       font-weight: 550;
-      word-wrap: break-word;
-      max-width: 85%;
+      word-break: break-all;
+      overflow: hidden; /* Hide overflowing content */
       height: auto;
       background-color: #f5f5f5;
       border-radius: 10px;
-      padding: 10px 15px 10px 15px;
-      margin: 10px 0 0 15px;
+      padding: 10px 15px;
       font-size: 14px;
+      display: inline-block;
     }
     .body_img {
-      /*文字自动换行*/
       font-weight: 550;
-      word-wrap: break-word;
-      max-width: 85%;
+      overflow: hidden; /* Hide overflowing content */
+      max-width: 100%;
       height: auto;
-      padding: 10px 10px 10px 10px;
+      padding: 10px;
       font-size: 14px;
+      line-height: 0; /* Remove extra space below image */
       img{
         width: 100%;
       }
@@ -125,7 +215,8 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
   margin: 0 0 0px 0;
   .main_body {
     opacity: 0;
-    max-width: 85%;
+    width: 100%;
+    text-align: right;
     .name {
       display: flex;
       flex-direction: row-reverse;
@@ -138,25 +229,27 @@ watch(() => [avatarElement.value, MainBodyElement.value], ([newAvatar, newMainBo
     }
 
     .body {
-      /*文字自动换行*/
       font-weight: 550;
-      word-wrap: break-word;
-      max-width: 85%;
+      word-break: break-all;
+      overflow: hidden; /* Hide overflowing content */
       height: auto;
+
       background-color: #f5f5f5;
       border-radius: 10px;
-      padding: 10px 15px 10px 15px;
-      margin: 10px 15px 0 0;
+      padding: 10px 15px;
+      margin: 0;
       font-size: 14px;
+      display: inline-block;
+      text-align: left;
     }
     .body_img {
-      /*文字自动换行*/
       font-weight: 550;
-      word-wrap: break-word;
-      max-width: 85%;
+      overflow: hidden; /* Hide overflowing content */
+      max-width: 100%;
       height: auto;
-      margin: 10px 15px 0 0;
+      margin: 0;
       font-size: 14px;
+      line-height: 0; /* Remove extra space below image */
       img{
         width: 100%;
       }
