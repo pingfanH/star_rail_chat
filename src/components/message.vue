@@ -2,6 +2,7 @@
 import "@/assets/index.css"
 import gsap  from "gsap"
 import {ref, watch, nextTick} from "vue";
+import {scroll_to_end} from "@/api/ultis";
 
 const Props = defineProps(['avatar','name','content','self','emote','dialog'])
 let avatar=ref(Props.avatar)
@@ -60,6 +61,7 @@ async function showContent() {
       duration: 0.2,
       ease: "power2.out",
     }).then(() => {
+      scroll_to_end(dialog.value.meta.id)
       if (self.value){
         gsap.delayedCall(1, () => {
           dialog.value.run = true;
